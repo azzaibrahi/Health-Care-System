@@ -1,6 +1,7 @@
 using Health_Care_System.Data;
 using Health_Care_System.Data.Interceptors;
 using Health_Care_System.Helper;
+using Health_Care_System.Middlewares;
 using Health_Care_System.Repositories;
 using Health_Care_System.Services;
 using Microsoft.EntityFrameworkCore;
@@ -67,6 +68,13 @@ public static class ApplicationServiceExtension
         services.AddScoped<IPatientService, PatientService>();
         services.AddScoped<IDoctorService, DoctorService>();
         services.AddScoped<IAppointmentService, AppointmentService>();
+
+        #endregion
+
+        #region Session 03
+
+        // IMiddleware types are activated through DI, so they must be registered.
+        services.AddScoped<RequestIdHeaderMiddleware>();
 
         #endregion
 
