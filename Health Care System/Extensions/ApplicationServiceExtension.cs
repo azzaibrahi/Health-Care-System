@@ -1,10 +1,15 @@
 using Health_Care_System.Data;
 using Health_Care_System.Data.Interceptors;
+using Health_Care_System.Entities;
+using Health_Care_System.Filters;
 using Health_Care_System.Helper;
 using Health_Care_System.Middlewares;
 using Health_Care_System.Repositories;
 using Health_Care_System.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
 namespace Health_Care_System.Extensions;
@@ -75,6 +80,44 @@ public static class ApplicationServiceExtension
 
         // IMiddleware types are activated through DI, so they must be registered.
         services.AddScoped<RequestIdHeaderMiddleware>();
+
+        #endregion
+
+        #region Session 04
+
+        // ServiceFilter attributes resolve these filters from DI.
+        services.AddScoped<ActionExecutionLoggingFilter>();
+        services.AddScoped<ActionTimingFilter>();
+        services.AddScoped<ExceptionHandlingFilter>();
+
+        services.AddDbContext<AuthenticationDbContext>(options =>
+            options.UseSqlServer(
+                configuration.GetConnectionString("AuthenticationConnection")));
+
+        services.AddIdentity<ApplicationUser, IdentityRole>()
+            .AddEntityFrameworkStores<AuthenticationDbContext>()
+            .AddDefaultTokenProviders();
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = configuration["Jwt:Issuer"],
+                ValidAudience = configuration["Jwt:Audience"],
+                IssuerSigningKey = JwtSigningKey.Create(configuration)
+            };
+        });
+
+        services.AddScoped<IJwtService, JwtService>();
 
         #endregion
 

@@ -26,10 +26,26 @@ namespace Health_Care_System
             app.UseMiddleware<RateLimitingMiddleware>();
 
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(options =>
+            {
+                // Swagger stores the raw token; send it as a bearer credential.
+                options.UseRequestInterceptor("""
+                    function (request) {
+                        const authorization = request.headers.Authorization || request.headers.authorization;
+
+                        if (authorization && !/^Bearer\s/i.test(authorization)) {
+                            request.headers.Authorization = `Bearer ${authorization}`;
+                            delete request.headers.authorization;
+                        }
+
+                        return request;
+                    }
+                    """);
+            });
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

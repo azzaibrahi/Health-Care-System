@@ -1,6 +1,8 @@
 using Health_Care_System.Dtos.AppointmentDtos;
+using Health_Care_System.Filters;
 using Health_Care_System.Results;
 using Health_Care_System.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Health_Care_System.Controllers;
@@ -11,11 +13,16 @@ namespace Health_Care_System.Controllers;
 /// </summary>
 [Route("api/[controller]")]
 [ApiController]
+[ServiceFilter(typeof(ActionExecutionLoggingFilter))]
+[ServiceFilter(typeof(ActionTimingFilter))]
+[ServiceFilter(typeof(ExceptionHandlingFilter))]
+[Authorize]
 public class AppointmentsController(IAppointmentService service) : ControllerBase
 {
     /// <summary>Returns every appointment.</summary>
     [HttpGet]
     [ProducesResponseType(typeof(GenericResult<IEnumerable<GetAppointmentResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetAll()
     {
         var result = await service.GetAllAsync();
@@ -28,9 +35,11 @@ public class AppointmentsController(IAppointmentService service) : ControllerBas
     /// <param name="doctorId">Doctor id.</param>
     /// <param name="appointmentDate">Appointment date and time.</param>
     /// <response code="200">The appointment was found.</response>
+    /// <response code="401">No valid bearer token was supplied.</response>
     /// <response code="404">No appointment matches the key.</response>
     [HttpGet("{patientId:int}/{doctorId:int}")]
     [ProducesResponseType(typeof(GenericResult<GetAppointmentResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(GenericResult<GetAppointmentResponse>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(
         int patientId,

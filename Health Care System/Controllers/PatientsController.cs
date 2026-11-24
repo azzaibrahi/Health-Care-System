@@ -1,6 +1,8 @@
 using Health_Care_System.Dtos.PatientDtos;
+using Health_Care_System.Filters;
 using Health_Care_System.Results;
 using Health_Care_System.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Health_Care_System.Controllers;
@@ -11,11 +13,16 @@ namespace Health_Care_System.Controllers;
 /// </summary>
 [Route("api/[controller]")]
 [ApiController]
+[ServiceFilter(typeof(ActionExecutionLoggingFilter))]
+[ServiceFilter(typeof(ActionTimingFilter))]
+[ServiceFilter(typeof(ExceptionHandlingFilter))]
+[Authorize]
 public class PatientsController(IPatientService service) : ControllerBase
 {
     /// <summary>Returns every patient.</summary>
     [HttpGet]
     [ProducesResponseType(typeof(GenericResult<IEnumerable<GetPatientResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetAll()
     {
         var result = await service.GetAllAsync();
@@ -26,9 +33,11 @@ public class PatientsController(IPatientService service) : ControllerBase
     /// <summary>Returns one patient by id.</summary>
     /// <param name="id">Patient id.</param>
     /// <response code="200">The patient was found.</response>
+    /// <response code="401">No valid bearer token was supplied.</response>
     /// <response code="404">No patient has this id.</response>
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(GenericResult<GetPatientResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(GenericResult<GetPatientResponse>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
