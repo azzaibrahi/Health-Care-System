@@ -1,5 +1,8 @@
 using Health_Care_System.Data;
 using Health_Care_System.Data.Interceptors;
+using Health_Care_System.Helper;
+using Health_Care_System.Repositories;
+using Health_Care_System.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
@@ -14,6 +17,8 @@ public static class ApplicationServiceExtension
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        #region Session 01
+
         services.AddEndpointsApiExplorer();
 
         services.AddSwaggerGen(options =>
@@ -44,6 +49,26 @@ public static class ApplicationServiceExtension
                 new CreatedAtInterceptor(),
                 new ModifiedAtInterceptor());
         });
+
+        #endregion
+
+        #region Session 02
+
+        services.AddAutoMapper(cfg =>
+        {
+            cfg.AddProfile<PatientProfile>();
+            cfg.AddProfile<DoctorProfile>();
+            cfg.AddProfile<AppointmentProfile>();
+        });
+
+        services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+        services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+
+        services.AddScoped<IPatientService, PatientService>();
+        services.AddScoped<IDoctorService, DoctorService>();
+        services.AddScoped<IAppointmentService, AppointmentService>();
+
+        #endregion
 
         return services;
     }
